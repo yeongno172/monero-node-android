@@ -1,0 +1,413 @@
+{
+	"async":
+	{
+		"bat_low": ["android.intent.action.BATTERY_LOW"],
+		"bat_ok": ["android.intent.action.BATTERY_OKAY"],
+		"pwr_usb": ["android.intent.action.ACTION_POWER_CONNECTED"],
+		"pwr_bat": ["android.intent.action.ACTION_POWER_DISCONNECTED"],
+		"sys_boot": ["android.intent.action.BOOT_COMPLETED"],
+		"sys_shdn": ["android.intent.action.ACTION_SHUTDOWN"],
+		"sys_tick": ["android.intent.action.TIME_TICK"],
+		"scr_on": ["android.intent.action.SCREEN_ON"],
+		"scr_off": ["android.intent.action.SCREEN_OFF"],
+		"net_air": ["android.intent.action.AIRPLANE_MODE"],
+		"net_wifi": ["android.net.wifi.WIFI_STATE_CHANGED"],
+		"notify": ["THIS MUST BE THE LAST LINE IN give_dict!"]
+	},
+	"scripts":
+	{
+		"init":
+		[
+			{
+				"fo":"!", "fx$":"flag_init",
+				
+				"/comment":"is monerod already running?",
+				"dx":"print_status",
+				"eo":"term",
+				"sr":"reg_out"
+			},
+			{
+				"do":"!!find", "dx$":"reg_out", "dy":"monerod is running", 
+				"sk":"key_run", "sr":"reg_tmp"
+			},
+			{
+				"do":"[]", "dx$":"key_list_run", "dy$":"key_run",
+				"sk":"noti_key0", "sr":"reg_tmp",
+				"/tx$":"key_run"
+			},
+			{
+				"/comment":"update notification",
+				"do":"pack", "dx":["noti_head", "noti_body", "noti_prog", "noti_key0", "noti_key1", "noti_key2"],
+				"eo":"give",
+				"sk": "flag_init", "sx":1
+			},
+			{
+				"do":"pack", "dx":["noti_head", "noti_body", "noti_prog", "noti_key0", "noti_key1", "noti_key2"],
+				"eo":"give",
+				"sk": "counter_skip", "sx":1
+			},
+			{
+				"fx$":"key_run",
+				"sk":"flag_update", "sx":1
+			}
+		],
+		"async":
+		[
+			{"sr": "async_idx"},
+			{"sr": "async_key"},
+			{"sr": "async_val"},
+			{"sr": "async_num"},
+			{"sr": "async_arr"},
+			{"sr": "async_dict"},
+			{
+				"fo":"=", "fx$":"async_key", "fy":"notify",
+				"sr": "async_noti"
+			}
+		],
+		"require_noti":
+		[
+			{
+				"fo":"=", "fx$":"async_noti", "fy":null,
+				"sk": "async_key", "sx":""
+			}
+		],
+		"counter_skip":
+		[
+			{
+				"fo":"=", "fx$":"async_key", "fy":"notify"
+			},
+			{
+				"fo":">", "fx$":"counter_skip", "fy":0,
+				"do":"-", "dx$":"counter_skip", "dy":1,
+				"sk": "counter_skip", "sr":"reg_tmp",
+				"/tx$":"counter_skip"
+			},
+			{
+				"sk":"async_key", "sx":""
+			},
+			{
+				"fo":">", "fx$":"counter_skip", "fy":0,
+				"eo":"noti"
+			},
+			{	
+				"do":"pack", "dx":["noti_head", "noti_body", "noti_prog", "noti_key0", "noti_key1", "noti_key2"],
+				"eo":"give"
+			}
+		],
+		
+		
+		"noti_user":
+		[
+			{
+				"fo":"=", "fx$":"async_key", "fy":"notify",
+				"do":"++", "dx":"notify", "dy$":"async_num",
+				"sk":"action_notify", "sr":"reg_tmp"
+			},
+			{
+				"sk":"flag_give", "sx":1
+			}
+		],
+		"noti_user_tap":
+		[
+			{
+				"fo":"=", "fx$":"action_notify", "fy":"notify",
+				"eo":"menu",
+				"sr":"reg_out"
+			},
+			{
+				"do":"[]", "dx$":"tmp_reg", "dy":0,
+				"sr":"reg_out",
+				"tx$":"reg_out"
+			}
+		],
+		"noti_user_key0":
+		[
+			{
+				"fo":"=", "fx$":"action_notify", "fy":"notify0",
+				"do":"+", "dx$":"key_run", "dy":1, "comment":"0bXX, 0b01=start, 0b10=stop, 0b11=stop&restart",
+				"sk":"action_node", "sr":"reg_tmp"
+			},
+			{	"do":"+1%", "dx$":"key_run", "dy":2,				"sk":"key_run", "sr":"reg_tmp"}
+		],
+		"noti_user_key1":
+		[
+			{
+				"fo":"=", "fx$":"action_notify", "fy":"notify1",
+				"do":"+1%#", "dx$":"key_mode", "dy$":"key_list_mode",
+				"sk":"key_mode", "sr":"reg_tmp"
+			},
+			{	"fx$":"key_run"},
+			{	"fo":"!=", "fx$":"key_mode", "fy$": "node_mode",	"sk":"key_run", "sx":2}			
+		],
+		"noti_user_key2":
+		[
+			{
+				"fo":"=", "fx$":"action_notify", "fy":"notify2",
+				"do":"+1%#", "dx$":"key_mine", "dy$":"key_list_mine",	"sk":"key_mine", "sr":"reg_tmp"
+			},
+			{	"fx$":"key_run"},
+			{	"fo":"!=", "fx$":"key_mine", "fy$": "node_mine",	"sk":"key_run", "sx":2}
+		],
+		"noti_reset_apply":
+		[
+			{	"fo":"=", "fx$":"key_run", "fy": 2},
+			{	"fo":"=", "fx$":"key_mode", "fy$": "node_mode"},
+			{	"fo":"=", "fx$":"key_mine", "fy$": "node_mine",		"sk":"key_run", "sx$":"node_run"}
+		],
+		"noti_keys_update":
+		[
+			{	"do":"[]", "dx$":"key_list_run", "dy$":"key_run",		"sk":"noti_key0", "sr":"reg_tmp"},
+			{	"do":"[]", "dx$":"key_list_mode", "dy$":"key_mode",		"sk":"noti_key1", "sr":"reg_tmp"},
+			{	"do":"[]", "dx$":"key_list_mine", "dy$":"key_mine",		"sk":"noti_key2", "sr":"reg_tmp"}
+		],
+		"clear_action_notify":
+		[
+			{	"sk":"action_notify"}
+		],
+
+
+
+		"node_user_change":
+		[
+			{
+				"fo":"!=", "fx$":"action_node", "fy":null,
+				"sk":"node_run", "sx$":"key_run"
+			},
+			{
+				"sk":"node_mode", "sx$":"key_mode"
+			},
+			{
+				"sk":"node_mine", "sx$":"key_mine"
+			}
+		],
+		"node_stop":
+		[
+			{
+				"fo":"&", "fx$":"action_node", "fy":2,
+				"dx":"exit",
+				"eo":"term"
+			},
+			{
+				"dx":"print_status",
+				"eo":"term", "ex":"monerod is NOT running",
+				"tx":"node stopped"
+			}
+		],
+		"node_stop_seset sync":
+		[
+			{
+				"fo":"=", "fx$":"action_node", "fy":2,
+				"sk":"info_hmin", "sx":null
+			}
+		],
+		"node_start":
+		[
+			{
+				"fo":"&", "fx$":"action_node", "fy":1,
+				"do":"[]", "dx$":"const_arg_list", "dy$":"node_mode",
+				"eo":"term"
+			},
+			{
+				"dx":"print_status",
+				"eo":"term", "ex":"monerod is running",
+				"tx":"node started"
+			}
+		],
+		"clear_action_node":
+		[
+			{	"sk":"action_node"}
+		],
+		
+		"sys_tick":
+		[
+			{
+				"fo":"=", "fx$":"async_key", "fy":"sys_tick"
+			},
+			{
+				"fx$":"node_run",
+				"sk":"flag_update", "sx":1
+			}
+		],
+		
+		
+		
+		"clear_flag_update":
+		[
+			{
+				"fx$":"flag_update",
+				"sk":"reg_out", "sr":null
+			},
+			{
+				"eo":"http", "http_body$":"const_rpc_info",
+				"sk":"info_json", "sr":"reg_out"
+			},
+			{
+				"fx$":"info_json"
+			},
+			{	"do":"jsonDe", "dx$":"info_json",								"sk":"info_dict", "sr":"reg_tmp"},
+			{	"do":"[]", "dx$":"info_dict", "dy":"result",					"sk":"info_dict", "sr":"reg_tmp"},
+			
+			{	"do":"[]", "dx$":"info_dict", "dy":"nettype",					"sk":"info_type", "sr":"reg_tmp"},
+			{	"do":"[]", "dx$":"info_dict", "dy":"version",					"sk":"info_vers", "sr":"reg_tmp"},
+			{	"do":"replace", "dx$":"info_type", "dy":"mainnet",				"sk":"info_type", "sr":"reg_tmp"},
+			{	"do":"replace", "dx$":"info_vers", "dy":"-release",				"sk":"info_vers", "sr":"reg_tmp"},
+			{	"do":"[]", "dx$":"const_mode_list", "dy$":"node_mode",			"sk":"mode_str",  "sr":"reg_tmp"},
+			
+			{	"do":"[]", "dx$":"info_dict", "dy":"difficulty",				"sk":"info_diff", "sr":"reg_tmp"},
+			{	"do":"[]", "dx$":"info_dict", "dy":"target",					"sk":"info_trgt", "sr":"reg_tmp"},
+			{	"do":"/", "dx$":"info_diff", "dy$":"info_trgt",					"sk":"info_hash", "sr":"reg_tmp"},
+			{	"do":"strMet", "dx$":"info_hash",								"sk":"info_hash", "sr":"reg_tmp"},
+			{	"do":"++", "dx$":"info_hash", "dy":"H/s",						"sk":"info_hash", "sr":"reg_tmp"},
+			
+			{	"do":"[]", "dx$":"info_dict", "dy":"outgoing_connections_count","sk":"info_p2po", "sr":"reg_tmp"},
+			{	"do":"[]", "dx$":"info_dict", "dy":"incoming_connections_count","sk":"info_p2pi", "sr":"reg_tmp"},
+			{	"do":"[]", "dx$":"info_dict", "dy":"rpc_connections_count",		"sk":"info_rpci", "sr":"reg_tmp"},
+			{	"do":"-", "dx$":"info_rpci", "dy":"1",							"sk":"info_rpci", "sr":"reg_tmp"},
+			
+			{	"do":"[]", "dx$":"info_dict", "dy":"tx_pool_size",				"sk":"info_pool", "sr":"reg_tmp"},
+			{	"do":"[]", "dx$":"info_dict", "dy":"block_size_median",			"sk":"info_smed", "sr":"reg_tmp"},
+			{	"do":"[]", "dx$":"info_dict", "dy":"block_size_limit",			"sk":"info_smax", "sr":"reg_tmp"},
+			{	"do":"strByte", "dx$":"info_smed",								"sk":"info_smed", "sr":"reg_tmp"},
+			{	"do":"strByte", "dx$":"info_smax",								"sk":"info_smax", "sr":"reg_tmp"},
+			
+			{	"do":"[]", "dx$":"info_dict", "dy":"height_without_bootstrap",	"sk":"info_hnow", "sr":"reg_tmp"},
+			{	"do":"[]", "dx$":"info_dict", "dy":"target_height",				"sk":"info_hmax", "sr":"reg_tmp"},
+			{	"do":"max","dx$":"info_hmax", "dy$":"info_hnow",				"sk":"info_hmax", "sr":"reg_tmp"},
+			{	"do":"||", "dx$":"info_hmin", "dy$":"info_hnow",				"sk":"info_hmin", "sr":"reg_tmp"},
+			{	"do":"-", "dx$":"info_hmax", "dy$":"info_hnow",					"sk":"info_hdel", "sr":"reg_tmp"},
+			
+			{	"do":"-", "dx$":"info_hnow", "dy$":"info_hmin",					"sk":"info_hnew", "sr":"reg_tmp"},
+			{	"do":"-", "dx$":"info_hmax", "dy$":"info_hmin",					"sk":"info_hreq", "sr":"reg_tmp"},
+			{	"do":"/", "dx$":"info_hnew", "dy$":"info_hreq",					"sk":"info_hper", "sr":"reg_tmp"},
+			{	"do":"*", "dx$":"info_hper", "dy":"100",						"sk":"info_hper", "sr":"reg_tmp"},
+			{	"do":"+", "dx$":"info_hper", "dy":"0.0001",						"sk":"info_hper", "sr":"reg_tmp"},
+			{	"do":"?", "dx$":"info_hdel", "dy$":"info_hper", "dz$":null,		"sk":"info_hper", "sr":"reg_tmp"},
+			
+			{	"do":"[]", "dx$":"info_dict", "dy":"database_size",				"sk":"info_mems", "sr":"reg_tmp"},
+			{	"do":"[]", "dx$":"info_dict", "dy":"free_space",				"sk":"info_memf", "sr":"reg_tmp"},
+			{	"do":"+", "dx$":"info_mems", "dy$":"info_memf",					"sk":"info_memt", "sr":"reg_tmp"},
+			{	"do":"strByte", "dx$":"info_mems",								"sk":"info_mems", "sr":"reg_tmp"},
+			{	"do":"strByte", "dx$":"info_memt",								"sk":"info_memt", "sr":"reg_tmp"},
+			
+			{	"do":"[]", "dx$":"info_dict", "dy":"start_time",				"sk":"info_time", "sr":"reg_tmp"},
+			{	"do":"dura", "dx":null,"dy$":"info_time","dz":"d'd' H'h' m'm' s's'","sk":"info_time", "sr":"reg_tmp"},
+			{	"do":"time", "dx":null, "dy":"HH:mm:ss",						"sk":"info_tnow", "sr":"reg_tmp"},
+			
+			{	"do":"pack", "dx$":"const_head_info",							"sr":"reg_tmp"},
+			{	"do":"replace", "dx$":"reg_tmp", "dy$":"const_head_search", "dz$":"const_head_replace", "sk":"noti_head", "sr":"reg_tmp"},
+			
+			{	"do":"pack", "dx$":"const_body_info",							"sk":"noti_body", "sr":"reg_tmp"},
+			{	"do":"replace", "dx$":"noti_body", "dy$":"const_body_search0", "dz$":"const_body_replace0", "sk":"noti_body0", "sr":"reg_tmp"},
+			{	"do":"replace", "dx$":"noti_body", "dy$":"const_body_search1", "dz$":"const_body_replace1", "sk":"noti_body1", "sr":"reg_tmp"},
+			{	"do":"++", "dx$":"noti_body0", "dy$":"noti_body1", 				"sk":"noti_body", "sr":"reg_tmp"},
+			
+			{					"sk":"noti_prog", "sx$":"info_hper"},
+			{					"sk":"flag_give", "sx":1},
+			{					"sk":"counter_skip", "sx":3	},
+			{	"eo":"noti",	"sk":"flag_update", "sx":0}
+		],
+
+		
+		"clear_flag_give":
+		[
+			{
+				"fx$":"flag_give",
+				"do":"pack", "dx":["noti_head", "noti_body", "noti_prog", "noti_key0", "noti_key1", "noti_key2"],
+				"eo":"give",
+				"sk":"flag_give", "sx":0
+			}
+		]
+	},
+	
+	"counter_skip":0,
+	
+	"action_notify":null,
+	"action_node":"null",
+	
+	"flag_init":0,
+	"flag_update":0,
+	"flag_give":0,
+	
+	"node_run":0,
+	"node_mode":0,
+	"node_mine":0,
+	
+	"mode_str":"",
+	"const_mode_list":["Local", "Local", "P2P", "RPC"],
+	"const_arg_list":
+	[	
+		"--detach --config-file /data/data/com.termux/files/home/storage/external-1/bitmonero/monerod.conf",
+		"--detach --config-file /data/data/com.termux/files/home/storage/external-1/bitmonero/monerod.conf",
+		"--detach --config-file /data/data/com.termux/files/home/storage/external-1/bitmonero/monerod_p2p.conf",
+		"--detach --config-file /data/data/com.termux/files/home/storage/external-1/bitmonero/monerod_rpc.conf"
+	],
+	
+
+	
+	"const_rpc_info":{"jsonrpc": "2.0", "id": "0", "method": "get_info"},
+	"const_rpc_version":{"jsonrpc": "2.0", "id": "0", "method": "get_version"},
+	
+	"const_vers":"0.4.4",
+	
+	"const_head_info":["info_vers", "info_type", "const_vers", "mode_str", "dummy"],
+	"const_body_info":["info_hnow","info_hmax","info_hdel","info_p2po","info_p2pi","info_rpci","info_pool","info_smed","info_smax","info_hash","info_mems","info_memt","info_time","info_tnow","dummy"],
+	"const_head_search":".*?info_vers: (.*?), info_type: (.*?), const_vers: (.*?), mode_str: (.*?),.*",
+	"const_head_replace":"Monero Node $1 (GUI: $3) $2 - $4",
+	"const_body_search0":".*?info_hnow: (.*?), info_hmax: (.*?), info_hdel: (.*?), info_p2po: (.*?), info_p2pi: (.*?), info_rpci: (.*?),.*",
+	"const_body_search1":".*?info_pool: (.*?), info_smed: (.*?), info_smax: (.*?), info_hash: (.*?), info_mems: (.*?), info_memt: (.*?), info_time: (.*?), info_tnow: (.*?),.*",
+	"const_body_replace0":"peers:\u00A0$4↑$5↓$6↕,\u2002height:\u00A0$1/\uFEFF$2\u00A0Δ$3,\u2002\n",
+	"const_body_replace1":"hash:\u00A0$4,\u2002storage:\u00A0$5/\uFEFF$6,\u2002\nmempool:\u00A0$1tx,\u2002block\u00A0size:\u00A0$2/\uFEFF$3,\u2002\nuptime:\u00A0$7,\u2002updated:\u00A0$8",
+	
+	"const_body_comment":"\u00A0 is a nonbreaking space, \uFEFF is a nonbreakimg zero width space, \u2002 is a wide space",
+	
+	"key_run":0,
+	"key_mode":0,
+	"key_mine":0,
+	"key_list_run":["[ Start ]","[ Stop ]","[ Apply ]"],
+	"key_list_mode":["[ Mode: Auto ]","[ Mode: Local ]","[ Mode: P2P ]", "[ Mode: RPC ]"],
+	"key_list_mine":["[ Mining: Auto ]", "[ Mining: Off ]", "[ Mining: On ]"],
+	
+
+	"----------":"Entries below are default accessed by key. Do not change the names",
+	
+	"async_noti":null,
+	"async_num":null,
+	"async_dict":null,
+	"async_idx":null,
+	"async_key":null,
+	"async_arr":null,
+	
+	"noti_head":"Monero Node",
+	"noti_body":"initializing...",
+	"noti_prog":null,
+	"noti_key0":"[ Start ]",
+	"noti_key1":"[ Mode: Auto ]",
+	"noti_key2":"[ Mining: Auto ]",
+	
+	"menu_head":"Monero Node Menu",
+	"menu_list":
+	{
+		"label1":"line1",
+		"label2":"line2",
+		"label3":"line3"
+	},
+	"menu_mult":0,
+	"menu_canc":1,
+	"menu_sort":0,
+	"menu_pres":null,
+	
+	"text_head":null,
+	"text_hint":null,
+	"text_body":null,
+	"text_type":"0x20001",
+	
+	"http_url":"http://localhost:18081/json_rpc",
+	"http_mthd":"POST",
+	"http_type":"application/json",
+	"http_body":{"jsonrpc": "2.0", "id": "0", "method": "get_version"},
+	"http_time":40,
+	
+	"fail_rtry":1,
+	
+	"dummy":""
+}
