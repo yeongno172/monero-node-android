@@ -36,6 +36,11 @@
 				"/tx$":"key_run"
 			},
 			{
+				"do":"[]", "dx$":"const_body_startup", "dy$":"key_run",
+				"sk":"noti_body", "sr":"reg_tmp",
+				"/tx$":"key_run"
+			},
+			{
 				"/comment":"update notification",
 				"do":"pack", "dx":["noti_head", "noti_body", "noti_prog", "noti_key0", "noti_key1", "noti_key2"],
 				"eo":"give",
@@ -188,12 +193,16 @@
 				"eo":"term"
 			},
 			{
+				"do":"[]", "dx$":"const_body_change", "dy$":"node_run",
+				"sk":"noti_body", "sr":"reg_tmp"
+			},
+			{
 				"dx":"print_status",
 				"eo":"term", "ex":"monerod is NOT running",
 				"tx":"node stopped"
 			}
 		],
-		"node_stop_seset sync":
+		"node_stop_reset_hmin":
 		[
 			{
 				"fo":"=", "fx$":"action_node", "fy":2,
@@ -206,6 +215,10 @@
 				"fo":"&", "fx$":"action_node", "fy":1,
 				"do":"[]", "dx$":"const_arg_list", "dy$":"node_mode",
 				"eo":"term"
+			},
+			{
+				"do":"[]", "dx$":"const_body_change", "dy$":"node_run",
+				"sk":"noti_body", "sr":"reg_tmp"
 			},
 			{
 				"dx":"print_status",
@@ -235,6 +248,9 @@
 		[
 			{
 				"fx$":"flag_update",
+				"sk":"flag_update", "sx":0
+			},	
+			{
 				"sk":"reg_out", "sr":null
 			},
 			{
@@ -301,10 +317,10 @@
 			{	"do":"replace", "dx$":"noti_body", "dy$":"const_body_search1", "dz$":"const_body_replace1", "sk":"noti_body1", "sr":"reg_tmp"},
 			{	"do":"++", "dx$":"noti_body0", "dy$":"noti_body1", 				"sk":"noti_body", "sr":"reg_tmp"},
 			
+			{					"sk":"info_json", "sx$":null},
 			{					"sk":"noti_prog", "sx$":"info_hper"},
 			{					"sk":"flag_give", "sx":1},
-			{					"sk":"counter_skip", "sx":3	},
-			{	"eo":"noti",	"sk":"flag_update", "sx":0}
+			{	"eo":"noti",	"sk":"counter_skip", "sx":3}
 		],
 
 		
@@ -336,18 +352,16 @@
 	"const_mode_list":["Local", "Local", "P2P", "RPC"],
 	"const_arg_list":
 	[	
-		"--detach --config-file /data/data/com.termux/files/home/storage/external-1/bitmonero/monerod.conf",
-		"--detach --config-file /data/data/com.termux/files/home/storage/external-1/bitmonero/monerod.conf",
-		"--detach --config-file /data/data/com.termux/files/home/storage/external-1/bitmonero/monerod_p2p.conf",
-		"--detach --config-file /data/data/com.termux/files/home/storage/external-1/bitmonero/monerod_rpc.conf"
+		"--detach --p2p-bind-ip 127.0.0.1 --rpc-bind-ip 127.0.0.1 --config-file /data/data/com.termux/files/home/storage/shared/monero-node/monerod.conf",
+		"--detach --p2p-bind-ip 127.0.0.1 --rpc-bind-ip 127.0.0.1 --config-file /data/data/com.termux/files/home/storage/shared/monero-node/monerod.conf",
+		"--detach --rpc-bind-ip 127.0.0.1 --config-file /data/data/com.termux/files/home/storage/shared/monero-node/monerod.conf",
+		"--detach --config-file /data/data/com.termux/files/home/storage/shared/monero-node/monerod.conf"
 	],
-	
-
 	
 	"const_rpc_info":{"jsonrpc": "2.0", "id": "0", "method": "get_info"},
 	"const_rpc_version":{"jsonrpc": "2.0", "id": "0", "method": "get_version"},
 	
-	"const_vers":"0.4.4",
+	"const_vers":"0.4.5",
 	
 	"const_head_info":["info_vers", "info_type", "const_vers", "mode_str", "dummy"],
 	"const_body_info":["info_hnow","info_hmax","info_hdel","info_p2po","info_p2pi","info_rpci","info_pool","info_smed","info_smax","info_hash","info_mems","info_memt","info_time","info_tnow","dummy"],
@@ -357,8 +371,10 @@
 	"const_body_search1":".*?info_pool: (.*?), info_smed: (.*?), info_smax: (.*?), info_hash: (.*?), info_mems: (.*?), info_memt: (.*?), info_time: (.*?), info_tnow: (.*?),.*",
 	"const_body_replace0":"peers:\u00A0$4↑$5↓$6↕,\u2002height:\u00A0$1/\uFEFF$2\u00A0Δ$3,\u2002\n",
 	"const_body_replace1":"hash:\u00A0$4,\u2002storage:\u00A0$5/\uFEFF$6,\u2002\nmempool:\u00A0$1tx,\u2002block\u00A0size:\u00A0$2/\uFEFF$3,\u2002\nuptime:\u00A0$7,\u2002updated:\u00A0$8",
-	
 	"const_body_comment":"\u00A0 is a nonbreaking space, \uFEFF is a nonbreakimg zero width space, \u2002 is a wide space",
+	
+	"const_body_startup":["Node not running. Please press the Start button to start.\nWhile the node is running, the notification will be updated every full minute.","Node running.\nWhile the node is running, the notification will be updated every full minute."],
+	"const_body_change":["Node stopped. Please press the Start button to start.","Node started, please wait."],
 	
 	"key_run":0,
 	"key_mode":0,
