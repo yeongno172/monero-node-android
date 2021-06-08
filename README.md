@@ -169,23 +169,23 @@ termux-open $PI/monero-node-gui.flo
 ```
 
 
-![Install QR code](termux_install_qr.png)
+![Install QR code](img-termux_install-qr.png)
 
 
 ### 3. Sideload Blockchain (optional)
 
 If you have a copy of the blockchain on another device (eg. on your computer), you can copy to the microSD card to *greatly* speed up the synchronisation. Because of Android file access restrictions, termux has only access to these folders:
 
-internal shared storage: `/data/data/com.termux/files/home/storage/shared/*` = `storage/emulated/0/*`
-external microSD: `/data/data/com.termux/files/home/storage/external-1/*` = `storage/XXXX-XXXX/Android/data/com.termux/files/*`
-microSD connected to a PC: `X:/Android/data/com.termux/files/*`
+- internal shared storage: `/data/data/com.termux/files/home/storage/shared/*` = `storage/emulated/0/*`
+- external microSD: `/data/data/com.termux/files/home/storage/external-1/*` = `storage/XXXX-XXXX/Android/data/com.termux/files/*`
+- microSD connected to a PC: `X:/Android/data/com.termux/files/*`
 
 By default the blockchain is expected to be on the microSD card on the path " `storage/XXXX-XXXX/Android/data/com.termux/files/bitmonero`,  if you want to use the internal storage you'll have to edit the paths in the .json file.
 
 Copy all content of the `bitmonero` folder  from your PC to the SD card. The default bitmonero location varies depending on your OS:
 
-Windows: `C:\ProgramData\bitmonero\`
-Linux/ MacOS: `$HOME/.bitmonero/`
+- Windows: `C:\ProgramData\bitmonero\`
+- Linux/ MacOS: `$HOME/.bitmonero/`
 
 Remember to rename the folder  from `.bitmonero` to `bitmonero` (without the dot).
 
@@ -193,7 +193,7 @@ Remember to rename the folder  from `.bitmonero` to `bitmonero` (without the dot
 
 ### 4. Modify Config file (optional)
 
-By default the GUI launches monerod with the the argument `--detach --p2p-bind-ip 127.0.0.1 --rpc-bind-ip 127.0.0.1 --config-file /data/data/com.termux/files/home/storage/shared/monero-node/monerod.conf`. The --p2p* and --rpc* flags are present depending on the current mode and used to disable P2P or RPC functionality independent from the config file. To enable either, it must be enabled in the GUI, the config file and the corresponding port must be open.
+By default the GUI launches monerod with the the argument `--detach --p2p-bind-ip 127.0.0.1 --rpc-bind-ip 127.0.0.1 --config-file /data/data/com.termux/files/home/storage/shared/monero-node/monerod.conf`. The`--p2p*` and `--rpc*` flags are present depending on the current mode and used to disable P2P or RPC functionality independent from the config file. To enable either, it must be enabled in the GUI, the config file and the corresponding port must be open.
 
 The provided default config file contains the recommended settings for best performance on older devices. It includes some annotations, the full description is available on https://monerodocs.org/interacting/monerod-reference/. If needed, you can modify it to your liking.
 
